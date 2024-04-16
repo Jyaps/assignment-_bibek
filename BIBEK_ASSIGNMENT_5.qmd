@@ -1,0 +1,75 @@
+![](images/clipboard-2249885403.png)
+
+---
+title: "BIBEK TIME SERIES ANALYSIS"
+format: docx
+editor: Bibek
+---
+#At first, I downloaded and renamed the .csv file as hawai.csv. 
+# After that I loaded necessary libraries.
+library(tidyverse)
+library(forecast)
+#Then, I set my working directory to folder containing the data file.
+setwd("C:/Users/BIBHA1/OneDrive - Université Laval/Documents/R/R assignment 5")
+bibek <- read_csv("hawai.csv")
+#As, per instruction the first objective is to create a timeseries of C02 thus i renamed it bibek_ts.
+bibek_ts <- ts(bibek$CO2, start = min(bibek$time), end = max(bibek$time), frequency = 12)
+#To visualize the timeseries, I used plot function.
+# Plotting the time series with CO2 ppm labeled on the y-axis
+plot(bibek_ts, ylab = "CO2 (ppm)", main = "CO2 Levels Over Time")
+#As per instruction, I had to set train_size to 70% of the length of the time series
+train_size <- floor(0.7 * length(bibek_ts))
+#I needed to check if train_size is within the length of the time series.
+if(train_size < length(bibek_ts)) {   train_data <- ts(bibek_ts[1:train_size], start = start(bibek_ts), frequency = frequency(bibek_ts))
+test_data <- ts(bibek_ts[(train_size + 1):length(bibek_ts)], start = start(bibek_ts) + train_size, frequency = frequency(bibek_ts))
+} else {  stop("Train size exceeds length of time series.") }
+
+#of different modwls in the given teaching materials, I choose ARIMA because of their ability to capture complex patterns in the data to make accurate and reliable forecasts.
+co2_model <- auto.arima(train_data)
+#Then, to generate forecast, I used forecast() function.
+forecast <- forecast(co2_model, h = length(test_data))
+#Then, I extracted projected values by extracting mean.
+projected_values <- forecast$mean
+
+# Before plotting, in order to create sequence of numbers representing the observations I used
+obs_seq <- 1:length(test_data)
+
+# Finally, I plot the test data and projected values with adjusted y-axis limits
+plot(obs_seq, test_data, type = "l", col = "red", ylim = range(c(test_data, projected_values)),
+     xlab = "Observations", ylab = "CO2 (ppm)", main = "Projected CO2 Levels vs. Test Data")
+lines(obs_seq, projected_values, col = "blue")  # Plot projected values
+legend("bottomright", legend = c("Test Data", "Projected"), col = c("red", "blue"), lty = 1)
+# Now, as per instruction I need to analyze residual analysis.Here, I would like to use and compare two methods namely ggtsdisplay and alternative residual analysis approach.
+#For ggts display we will have a more comprehensive visualization including residuals vs year, Autocorrelation function (ACF) and Partial autocorrelation function (PACF)
+ggtsdisplay(residuals(forecast))
+ggts <- ggtsdisplay(residuals(forecast))
+#For alternative residual methods we will use step by step analysis, focusing on the distribution and normality of residualsusing histogram and normality curve.
+resid <- residuals(forecast)
+# To create histogram of residuals
+hist(resid, freq = FALSE, main = "Histogram of Residuals", xlab = "Residuals")
+# To add normality curve
+mu <- mean(resid)
+sigma <- sd(resid)
+curve(dnorm(x, mean = mu, sd = sigma), add = TRUE, col = "blue", lwd = 2)
+---
+
+## Quarto
+
+Quarto enables you to weave together content and executable code into a finished document. To learn more about Quarto see <https://quarto.org>.
+
+## Running Code
+
+When you click the **Render** button a document will be generated that includes both content and the output of embedded code. You can embed code like this:
+
+```{r}
+1 + 1
+```
+
+You can add options to executable code like this
+
+```{r}
+#| echo: false
+2 * 2
+```
+
+The `echo: false` option disables the printing of code (only output is displayed).
